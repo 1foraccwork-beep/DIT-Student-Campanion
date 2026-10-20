@@ -1,0 +1,16 @@
+# Secret configuration and local environment files
+config/backup.env
+.env
+.env.*
+!.env.example
+
+# Local backup artifacts and logs
+backups/
+*.dump
+*.dump.gpg
+*.dump.gpg.sha256
+*.log
+
+# Dependency and OS noise
+node_modules/
+.DS_Store

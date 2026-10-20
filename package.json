@@ -1,0 +1,12 @@
+{
+  "name": "dit-student-companion-ops",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "backup:database": "bash ./scripts/backup-database.sh"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10"
+}
