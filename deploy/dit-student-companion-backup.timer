@@ -1,0 +1,10 @@
+[Unit]
+Description=Run DIT Student Companion encrypted backup daily at 02:00 UTC
+
+[Timer]
+OnCalendar=*-*-* 02:00:00 UTC
+Persistent=true
+Unit=dit-student-companion-backup.service
+
+[Install]
+WantedBy=timers.target

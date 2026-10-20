@@ -1,0 +1,18 @@
+[Unit]
+Description=DIT Student Companion encrypted PostgreSQL backup
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ditbackup
+Group=ditbackup
+WorkingDirectory=/opt/dit-student-companion
+Environment=BACKUP_CONFIG_FILE=/etc/dit-student-companion/backup.env
+ExecStart=/usr/bin/env bash /opt/dit-student-companion/scripts/backup-database.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/backups/dit-student-companion
+UMask=0077
