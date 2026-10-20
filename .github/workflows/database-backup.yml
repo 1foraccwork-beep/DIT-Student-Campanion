@@ -1,0 +1,60 @@
+name: Encrypted database backup
+
+on:
+  schedule:
+    # GitHub Actions cron uses UTC. Scheduled runs may be delayed during load.
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Backup production database
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+      BACKUP_ENCRYPTION_PASSPHRASE_FILE: ${{ runner.temp }}/backup-passphrase
+      BACKUP_DIR: ${{ runner.temp }}/dit-student-companion-backups
+      BACKUP_RETENTION_DAYS: '1'
+
+    steps:
+      - name: Check out backup runner
+        uses: actions/checkout@v4
+
+      - name: Install backup tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends postgresql-client gnupg
+
+      - name: Prepare secret file
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$DATABASE_URL"
+          test -n "$BACKUP_ENCRYPTION_PASSPHRASE"
+          printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" > "$BACKUP_ENCRYPTION_PASSPHRASE_FILE"
+          chmod 600 "$BACKUP_ENCRYPTION_PASSPHRASE_FILE"
+
+      - name: Create and verify encrypted backup
+        run: ./scripts/backup-database.sh
+
+      - name: Upload encrypted backup artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dit-student-companion-database-backup-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/dit-student-companion-backups/*.dump.gpg
+            ${{ runner.temp }}/dit-student-companion-backups/*.dump.gpg.sha256
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0

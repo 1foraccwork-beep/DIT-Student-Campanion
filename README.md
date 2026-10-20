@@ -50,3 +50,14 @@ journalctl -u dit-student-companion-backup.service --since today --no-pager
 ```
 
 Do not put database credentials, passphrases, or backup files in Git. The sandbox used to prepare this repository is not a persistent production scheduler.
+
+## GitHub Actions alternative
+
+`/.github/workflows/database-backup.yml` provides an alternative to the systemd timer. It runs daily at **02:00 UTC** and can also be started manually from the GitHub Actions tab. Do not enable both schedulers unless you intentionally want two backups per day.
+
+Before using it, add these **Actions secrets** in the repository settings:
+
+- `DATABASE_URL`: the production PostgreSQL connection URL
+- `BACKUP_ENCRYPTION_PASSPHRASE`: the passphrase used to encrypt backups
+
+The workflow installs `pg_dump` and GnuPG, creates and verifies the encrypted backup, and uploads only the encrypted dump and checksum as a GitHub artifact with 30-day retention. GitHub Actions artifacts are not a complete off-site disaster-recovery strategy; for critical production data, copy encrypted artifacts to durable object storage with an independent retention policy. Never place either secret in workflow files or commit them to Git.
